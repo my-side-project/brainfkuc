@@ -1,4 +1,4 @@
-import source.util as util
+import brainfuck.util as util
 
 
 stackable_commands = set(['>', '<', '+', '-'])

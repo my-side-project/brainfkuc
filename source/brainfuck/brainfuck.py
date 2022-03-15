@@ -1,7 +1,7 @@
 import sys
-import source.util as util
+import brainfuck.util as util
 
-from source.compiler import compile
+from brainfuck.compiler import compile
 
 HEAP_SIZE = 30000
 
