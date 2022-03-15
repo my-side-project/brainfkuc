@@ -63,7 +63,20 @@ class Node:
         self.jump_to = jump_to
     
     def __str__(self):
-        return f'{self.line}: cmd={self.command}, qnt={self.qnt}, jmp={self.jump_to}'
-    
+        if self.command == '+':
+            return f'{self.line}: ADD {self.qnt}'
+        elif self.command == '-':
+            return f'{self.line}: SUB {self.qnt}'
+        elif self.command == '>':
+            return f'{self.line}: MOVE_RIGHT {self.qnt}'
+        elif self.command == '<':
+            return f'{self.line}: MOVE_LEFT {self.qnt}'
+        elif self.command == '.':
+            return f'{self.line}: PRINT'
+        elif self.command == '[':
+            return f'{self.line}: JZ {self.jump_to + 1}'
+        elif self.command == ']':
+            return f'{self.line}: JNZ {self.jump_to + 1}'
+
     def __repr__(self):
         return self.__str__()
