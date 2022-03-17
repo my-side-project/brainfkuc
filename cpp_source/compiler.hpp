@@ -21,4 +21,6 @@ namespace compiler {
     };
 
     vector<Node> compile(const string &program_text);
+
+    void print_assembly(vector<Node> compiled);
 }

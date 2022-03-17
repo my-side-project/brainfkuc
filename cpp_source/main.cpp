@@ -2,13 +2,14 @@
 #include <vector>
 #include <iostream>
 
-#include "util.hpp"
+#include "interpreter.hpp"
 
 using namespace std;
-using namespace util;
+using namespace interpreter;
 
 int main() {
-    string x = "+++>--ssd";
-    string clean_program = util::clean_program(x);
-    cout<<clean_program<<util::add(2,6)<<endl;
+    string x = "++++++++[>++++ [>++>+++>+++>+<<<<-] >+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
+    string output = interpret(x);
+
+    cout << output << endl;
 }
