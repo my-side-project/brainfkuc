@@ -8,7 +8,9 @@ using namespace std;
 using namespace util;
 using namespace compiler;
 
+const int cell_size = 256;
 const int heap_size = 30000;
+
 
 string interpreter::interpret(const string &program_txt) {
     vector<Node> compiled = compile(program_txt);
@@ -26,19 +28,23 @@ string interpreter::interpret(const string &program_txt) {
     while (code_ptr < compiled.size()) {
         Node command = compiled[code_ptr];
 
+        if (data_ptr < 0) {
+            return "";
+        }
+
         switch (command.get_command())
         {
             case '+':
-                heap[data_ptr] = add(heap[data_ptr], command.get_qnt());
+                heap[data_ptr] = add(heap[data_ptr], command.get_qnt(), cell_size);
                 break;
             case '-':
-                heap[data_ptr] = subtract(heap[data_ptr], command.get_qnt());
+                heap[data_ptr] = subtract(heap[data_ptr], command.get_qnt(), cell_size);
                 break;
             case '>':
-                data_ptr += command.get_qnt();
+                data_ptr = add(data_ptr, command.get_qnt(), heap_size);
                 break;
             case '<':
-                data_ptr -= command.get_qnt();
+                data_ptr = subtract(data_ptr, command.get_qnt(), heap_size);
                 break;
             case '.':
                 output.push_back((char) heap[data_ptr]);

@@ -8,16 +8,16 @@ using namespace std;
 const char valid_commands[] = {'>', '<', '+', '-', '.', '[', ']'};
 const unordered_set<char> valid_command_set (std::begin(valid_commands), std::end(valid_commands));
 
-int util::add(const int val, const int to_add) {
-    return (val + to_add) % 256;
+int util::add(const int val, const int to_add, const int offset) {
+    return (val + to_add) % offset;
 }
 
-int util::subtract(const int val, const int to_subtract) {
+int util::subtract(const int val, const int to_subtract, const int offset) {
     int diff = val - to_subtract;
 
     if (diff >= 0) return diff;
 
-    return util::subtract(255, to_subtract - val - 1);
+    return util::subtract(offset - 1, to_subtract - val - 1, offset);
 }
 
 string util::clean_program(const string &program_text) {

@@ -10,7 +10,7 @@ namespace compiler {
         char command;
 
         public:
-        Node(int line, char command, int qnt);
+        Node(int line, char command, int qnt, int jump_to);
 
         void set_jump_to(int jump_to);
         

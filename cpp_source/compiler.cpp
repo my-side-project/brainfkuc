@@ -8,73 +8,54 @@
 #include "util.hpp"
 
 using namespace std;
+using namespace compiler;
 
 const char stackable_commands[] = { '>', '<', '+', '-' };
 const unordered_set<char> stackable_commands_set(begin(stackable_commands), end(stackable_commands));
 
-vector<compiler::Node> compiler::compile(const string &program_text) {
+vector<Node> compiler::compile(const string &program_text) {
     string program = util::clean_program(program_text);
 
-    vector<compiler::Node> compiled_program;
-    stack<compiler::Node> stack;
+    stack<int> stack;
+    vector<Node> compiled_program;
 
     char last_instr = '\0';
     int last_instr_qnt = 0;
 
     int line = 0;
 
-    string::iterator command;
-    for (command = program.begin(); command != program.end(); command++) {
-        if (stackable_commands_set.find(*command) == stackable_commands_set.end()
-                && last_instr != '\0') {
-            
-            Node new_node(line++, last_instr, last_instr_qnt);
-            compiled_program.push_back(new_node);
+    string::iterator it;
+    for (it = program.begin(); it != program.end(); it++) {
+        char command = *it;
+
+        // If we finished an instruction stream, flush to output
+        if (last_instr != '\0' && last_instr != command) {
+            compiled_program.push_back(Node (line++, last_instr, last_instr_qnt, -1));
 
             last_instr = '\0';
             last_instr_qnt = 0;
         }
 
-        if (*command == '[') {
-
-            Node loop_start (line++, *command, 1);
-            stack.push(loop_start);
-            compiled_program.push_back(loop_start);
-
-        } else if (*command == ']') {
-            
-            Node popped = stack.top();
+        if (command == '[') {
+            stack.push(line);
+            compiled_program.push_back(Node (line++, command, 1, -1));
+        } else if (command == ']') {
+            compiled_program[stack.top()].set_jump_to(line);
+            int jump_line = compiled_program[stack.top()].get_line();
             stack.pop();
-            popped.set_jump_to(line);
 
-            Node loop_end (line++, *command, 1);
-            loop_end.set_jump_to(popped.get_line());
-
-            compiled_program.push_back(loop_end);
-
-        } else if (stackable_commands_set.find(*command) != stackable_commands_set.end()) {
-            if (last_instr == '\0') {
-                last_instr = *command;
-            }
-
-            if (last_instr != *command) {
-                Node stackable (line++, last_instr, last_instr_qnt);
-                compiled_program.push_back(stackable);
-
-                last_instr = *command;
-                last_instr_qnt = 1;
-            } else {
-                last_instr_qnt += 1;
-            }
+            compiled_program.push_back(Node (line++, command, 1, jump_line));
+        } else if (stackable_commands_set.find(command) != stackable_commands_set.end()) {
+            if (last_instr == '\0') last_instr = command;
+            last_instr_qnt += 1;
         } else {
-            Node node (line++, *command, 1);
-            compiled_program.push_back(node);
+            // This is just the "." command that we'd just push without any magic.
+            compiled_program.push_back(Node (line++, command, 1, -1));
         }
     }
 
-    if (last_instr != '\0') {
-        Node new_node(line++, last_instr, last_instr_qnt);
-        compiled_program.push_back(new_node);
+    if (last_instr != 0) {
+        compiled_program.push_back(Node (line++, last_instr, last_instr_qnt, -1));
     }
 
     return compiled_program;
@@ -104,19 +85,20 @@ void compiler::print_assembly(vector<Node> compiled) {
                 cout << node.get_line() << ": PRINT" << endl;
                 break;
             case '[':
-                cout << node.get_line() << ": JZ" << node.get_jump_to() << endl;
+                cout << node.get_line() << ": JZ " << node.get_jump_to() << endl;
                 break;
             case ']':
-                cout << node.get_line() << ": JNZ" << node.get_jump_to() << endl;
+                cout << node.get_line() << ": JNZ " << node.get_jump_to() << endl;
                 break;
         }
     }
 }
 
-compiler::Node::Node(int line, char command, int qnt) {
+compiler::Node::Node(int line, char command, int qnt, int jump_to) {
     this->line = line;
     this->command = command;
     this->qnt = qnt;
+    this->jump_to = jump_to;
 }
 
 void compiler::Node::set_jump_to(int jump_to) {
