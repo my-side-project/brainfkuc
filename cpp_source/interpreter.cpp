@@ -26,35 +26,31 @@ string interpreter::interpret(const string &program_txt) {
     string output;
 
     while (code_ptr < compiled.size()) {
-        Node command = compiled[code_ptr];
+        Node node = compiled[code_ptr];
+        string command = node.get_command();
 
         if (data_ptr < 0) {
             return "";
         }
 
-        switch (command.get_command())
-        {
-            case '+':
-                heap[data_ptr] = add(heap[data_ptr], command.get_qnt(), cell_size);
-                break;
-            case '-':
-                heap[data_ptr] = subtract(heap[data_ptr], command.get_qnt(), cell_size);
-                break;
-            case '>':
-                data_ptr = add(data_ptr, command.get_qnt(), heap_size);
-                break;
-            case '<':
-                data_ptr = subtract(data_ptr, command.get_qnt(), heap_size);
-                break;
-            case '.':
-                output.push_back((char) heap[data_ptr]);
-                break;
-            case '[':
-                if (heap[data_ptr] == 0) code_ptr = command.get_jump_to();
-                break;
-            case ']':
-                if (heap[data_ptr] != 0) code_ptr = command.get_jump_to();
-                break;
+        if (command == "PRNT") {
+            output.push_back((char) heap[data_ptr]);
+        } else if (command == "ADD") {
+            if (node.get_op1() >= 0) {
+                heap[data_ptr] = add(heap[data_ptr], node.get_op1(), cell_size);
+            } else {
+                heap[data_ptr] = subtract(heap[data_ptr], -node.get_op1(), cell_size);
+            }
+        } else if (command == "MOVE") {
+            if (node.get_op1() >= 0) {
+                data_ptr = add(data_ptr, node.get_op1(), heap_size);
+            } else {
+                data_ptr = subtract(data_ptr, -node.get_op1(), heap_size);
+            }
+        } else if (command == "JZ") {
+            if (heap[data_ptr] == 0) code_ptr = node.get_op1();
+        } else if (command == "JNZ") {
+            if (heap[data_ptr] != 0) code_ptr = node.get_op1();
         }
 
         code_ptr += 1;

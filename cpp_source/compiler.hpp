@@ -6,18 +6,21 @@ using namespace std;
 namespace compiler {
 
     class Node {
-        int line, qnt, jump_to;
-        char command;
+        int line, op1, op2;
+        string command;
 
         public:
-        Node(int line, char command, int qnt, int jump_to);
+        Node(int line, string command, int op1, int op2);
 
-        void set_jump_to(int jump_to);
+        void set_op1(int op1);
+        void set_op2(int op2);
         
-        int get_jump_to();
+        int get_op1();
+        int get_op2();
+
         int get_line();
-        int get_qnt();
-        char get_command();
+
+        string get_command();
     };
 
     vector<Node> compile(const string &program_text);
