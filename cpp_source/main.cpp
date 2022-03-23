@@ -4,6 +4,7 @@
 #include <fstream>
 
 #include "compiler.hpp"
+#include "compiler_data.hpp"
 #include "interpreter.hpp"
 
 using namespace std;
@@ -34,7 +35,7 @@ int main(int argc, char** argv) {
         string output = interpret(code);
         cout << output << endl;
     } else {
-        vector<Node> compiled = compile(code);
+        vector<compiler_data::Node> compiled = compile(code);
         print_assembly(compiled);
     }
 }

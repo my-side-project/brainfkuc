@@ -2,18 +2,20 @@
 
 #include "util.hpp"
 #include "compiler.hpp"
+#include "compiler_data.hpp"
 #include "interpreter.hpp"
 
 using namespace std;
 using namespace util;
 using namespace compiler;
+using namespace compiler_data;
 
 const int cell_size = 256;
 const int heap_size = 30000;
 
 
 string interpreter::interpret(const string &program_txt) {
-    vector<Node> compiled = compile(program_txt);
+    vector<compiler_data::Node> compiled = compile(program_txt);
 
     int code_ptr = 0;
     int data_ptr = 0;
@@ -26,7 +28,7 @@ string interpreter::interpret(const string &program_txt) {
     string output;
 
     while (code_ptr < compiled.size()) {
-        Node node = compiled[code_ptr];
+        compiler_data::Node node = compiled[code_ptr];
         string command = node.get_command();
 
         if (data_ptr < 0) {
@@ -40,6 +42,12 @@ string interpreter::interpret(const string &program_txt) {
                 heap[data_ptr] = add(heap[data_ptr], node.get_op1(), cell_size);
             } else {
                 heap[data_ptr] = subtract(heap[data_ptr], -node.get_op1(), cell_size);
+            }
+        } else if (command == "ADDM") {
+            if (node.get_op1() >= 0) {
+                heap[data_ptr + node.get_op1()] = add(heap[data_ptr + node.get_op1()], node.get_op2(), cell_size);
+            } else {
+                heap[data_ptr + node.get_op1()] = subtract(heap[data_ptr + node.get_op1()], node.get_op2(), cell_size);
             }
         } else if (command == "MOVE") {
             if (node.get_op1() >= 0) {
