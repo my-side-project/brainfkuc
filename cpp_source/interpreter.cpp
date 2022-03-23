@@ -1,4 +1,5 @@
 #include <string>
+#include <math.h>
 
 #include "util.hpp"
 #include "compiler.hpp"
@@ -12,7 +13,7 @@ using namespace compiler_data;
 
 const int cell_size = 256;
 const int heap_size = 30000;
-
+const int register_size = 8;
 
 string interpreter::interpret(const string &program_txt) {
     vector<compiler_data::Node> compiled = compile(program_txt);
@@ -21,9 +22,10 @@ string interpreter::interpret(const string &program_txt) {
     int data_ptr = 0;
 
     int heap[heap_size];
-    for (int i=0; i<heap_size; i++) {
-        heap[i] = 0;
-    }
+    int registers[register_size];
+
+    for (int i=0; i<heap_size; i++) heap[i] = 0;
+    for (int i=0; i<register_size; i++) registers[i] = 0;
 
     string output;
 
@@ -35,30 +37,80 @@ string interpreter::interpret(const string &program_txt) {
             return "";
         }
 
-        if (command == "PRNT") {
+        if (command == CMD_PRINT) {
             output.push_back((char) heap[data_ptr]);
-        } else if (command == "ADD") {
-            if (node.get_op1() >= 0) {
-                heap[data_ptr] = add(heap[data_ptr], node.get_op1(), cell_size);
-            } else {
-                heap[data_ptr] = subtract(heap[data_ptr], -node.get_op1(), cell_size);
+        }
+
+        if (command == CMD_ADD) {
+            int o1, o2;
+
+            switch(node.get_overload()) {
+                case 0:
+                    o1 = heap[data_ptr + node.get_op1()];
+                    o2 = node.get_op2();
+
+                    heap[data_ptr + node.get_op1()] = o2 >= 0 ? add(o1, o2, cell_size) : subtract(o1, -o2, cell_size);
+                    break;
+
+                case 1:
+                    o1 = heap[data_ptr + node.get_op1()];
+                    o2 = registers[node.get_op2()];
+
+                    heap[data_ptr + node.get_op1()] = o2 >= 0 ? add(o1, o2, cell_size) : subtract(o1, -o2, cell_size);
+                    break;
             }
-        } else if (command == "ADDM") {
-            if (node.get_op1() >= 0) {
-                heap[data_ptr + node.get_op1()] = add(heap[data_ptr + node.get_op1()], node.get_op2(), cell_size);
-            } else {
-                heap[data_ptr + node.get_op1()] = subtract(heap[data_ptr + node.get_op1()], node.get_op2(), cell_size);
+        }
+
+        if (command == CMD_MUL) {
+            switch(node.get_overload()) {
+                case 0:
+                    int o1 = registers[node.get_op1()];
+                    int o2 = node.get_op2();
+
+                    int mult = o1 * o2;
+                    registers[node.get_op1()] = mult >= 0 ? add(0, mult, cell_size) : subtract(0, -mult, cell_size);
+                    break;
             }
-        } else if (command == "MOVE") {
-            if (node.get_op1() >= 0) {
-                data_ptr = add(data_ptr, node.get_op1(), heap_size);
-            } else {
-                data_ptr = subtract(data_ptr, -node.get_op1(), heap_size);
+        }
+
+        if (command == CMD_DIV) {
+            switch(node.get_overload()) {
+                case 0:
+                    int o1 = registers[node.get_op1()];
+                    int o2 = node.get_op2();
+                    int should_floor = node.get_op3();
+
+                    double div = (double) o1 / o2;
+                    int ans = (int) (should_floor == 1 ? floor(div) : ceil(div));
+
+                    registers[node.get_op1()] = ans >= 0 ? add(0, ans, cell_size) : subtract(0, -ans, cell_size);
+                    break;
             }
-        } else if (command == "JZ") {
-            if (heap[data_ptr] == 0) code_ptr = node.get_op1();
-        } else if (command == "JNZ") {
-            if (heap[data_ptr] != 0) code_ptr = node.get_op1();
+        }
+
+        if (command == CMD_COPY) {
+            switch(node.get_overload()) {
+                case 0:
+                    heap[data_ptr + node.get_op1()] = node.get_op2();
+                    break;
+
+                case 1:
+                    heap[data_ptr + node.get_op1()] = registers[node.get_op2()];
+                    break;
+            }
+        }
+
+        if (command == CMD_MOVE) {
+            int move_by = node.get_op1();
+            data_ptr = move_by >= 0 ? add(data_ptr, move_by, heap_size) : subtract(data_ptr, -move_by, heap_size);
+        }
+
+        if (command == CMD_JZ) {
+            if (heap[data_ptr + node.get_op1()] == 0) code_ptr = node.get_op2();
+        }
+
+        if (command == CMD_JNZ) {
+            if (heap[data_ptr + node.get_op1()] != 0) code_ptr = node.get_op2();
         }
 
         code_ptr += 1;

@@ -36,12 +36,6 @@ const unordered_set<char> stackable_commands_set(begin(stackable_commands), end(
 
     PRNT   <MEM_LOCATION>  -- Print the given memory location.
 
-    ADD     <NUM_LITERAL>  <NONE>    -- Add literal to the data pointer location.
-    MOVE    <NUM_LITERAL>  <NONE>    -- Moves the data pointer by given positions.
-    JZ      <NUM_LITERAL>  <NONE>    -- If current data is 0, jump to the given location.
-    JNZ     <NUM_LITERAL>  <NONE>    -- If current data is not 0, jump to the given location.
-    PRNT    <NONE>         <NONE>    -- Print the ascii value of the current data.
-
     Note: all memory locations are relative pointers to the current location of the data pointer
     so negative values are allowed.
  */
@@ -58,14 +52,14 @@ vector<compiler_data::Node> parseCode(const string &raw_program) {
         char command = program[code_ptr];
 
         if (command == '.') {
-            compiled_program.push_back(compiler_data::Node (line++, 0, "PRNT", -1, -1, -1, -1));
+            compiled_program.push_back(compiler_data::Node (line++, 0, CMD_PRINT, -1, -1, -1, -1));
         } else if (command == '>' || command == '<') {
             int moves = 0;
             while (code_ptr < program.size() && (program[code_ptr] == '>' || program[code_ptr] == '<')) {
                 moves += (program[code_ptr++] == '>' ? 1 : -1);
             }
 
-            compiled_program.push_back(compiler_data::Node (line++, 0, "MOVE", moves, -1, -1, -1));
+            compiled_program.push_back(compiler_data::Node (line++, 0, CMD_MOVE, moves, -1, -1, -1));
             continue;
         } else if (command == '+' || command == '-') {
             int adds = 0;
@@ -73,16 +67,16 @@ vector<compiler_data::Node> parseCode(const string &raw_program) {
                 adds += (program[code_ptr++] == '+' ? 1 : -1);
             }
 
-            compiled_program.push_back(compiler_data::Node (line++, 0, "ADD", adds, -1, -1, -1));
+            compiled_program.push_back(compiler_data::Node (line++, 0, CMD_ADD, 0, adds, -1, -1));
             continue;
         } else if (command == '[') {
             stack.push(line);
-            compiled_program.push_back(compiler_data::Node (line++, 0, "JZ", -1, -1, -1, -1));
+            compiled_program.push_back(compiler_data::Node (line++, 0, CMD_JZ, 0, -1, -1, -1));
         } else if (command == ']') {
             int popped = stack.top(); stack.pop();
             
-            compiled_program[popped].set_op1(line);
-            compiled_program.push_back(compiler_data::Node (line++, 0, "JNZ", popped, -1, -1, -1));
+            compiled_program[popped].set_op2(line);
+            compiled_program.push_back(compiler_data::Node (line++, 0, CMD_JNZ, 0, popped, -1, -1));
         }
 
         code_ptr++;
@@ -106,9 +100,9 @@ void compiler::print_assembly(vector<compiler_data::Node> compiled) {
         compiler_data::Node node = *it;
         string command = node.get_command();
 
-        if (command == "PRNT") {
+        if (command == CMD_PRINT) {
             cout << node.get_line() << ": " << command << endl;
-        } else if (command == "MOVE" || command == "ADD" || command == "JZ" || command == "JNZ") {
+        } else if (command == CMD_MOVE || command == CMD_ADD || command == CMD_JZ || command == CMD_JNZ) {
             cout << node.get_line() << ": " << command << " " << node.get_op1() << endl;
         }
     }
