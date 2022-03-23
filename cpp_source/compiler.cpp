@@ -100,10 +100,6 @@ void compiler::print_assembly(vector<compiler_data::Node> compiled) {
         compiler_data::Node node = *it;
         string command = node.get_command();
 
-        if (command == CMD_PRINT) {
-            cout << node.get_line() << ": " << command << endl;
-        } else if (command == CMD_MOVE || command == CMD_ADD || command == CMD_JZ || command == CMD_JNZ) {
-            cout << node.get_line() << ": " << command << " " << node.get_op1() << endl;
-        }
+        cout << node.get_line() << ": " << node.get_overload() << ": " << command << " " << node.get_op1() << " " << node.get_op2() << " " << node.get_op3() << " " << node.get_op4() << endl;
     }
 }
