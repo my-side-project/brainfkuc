@@ -95,17 +95,13 @@ vector<compiler_data::Node> solve_simple_flat_loop(Loop loop, vector<compiler_da
 
     decrement = -decrement;
 
-    // Copy the start loc to register 0
-    output.push_back(Node (-1, 2, CMD_COPY, 0, 0, -1, -1));
-    // Divide by decrement with ceiling
-    output.push_back(Node (-1, 2, CMD_DIV, 0, decrement, 0, -1));
-
     unordered_map<int, int>::iterator it = node_weights.begin();
     while (it != node_weights.end()) {
         int mem_loc = it->first;
         int count = it->second;
 
-        
+        // Copy contents of register 0 to a temp register 1
+        output.push_back(Node (-1, 0, CMD_ADD, mem_loc, decrement * count, -1, -1));
     }
 
     return output;
