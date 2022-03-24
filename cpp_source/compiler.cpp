@@ -28,6 +28,8 @@ const unordered_set<char> stackable_commands_set(begin(stackable_commands), end(
 
     COPY    <MEM_LOCATION> <LITERAL>  -- Copy a literal to a memory location.
     COPY    <MEM_LOCATION> <REG_NO>   -- Copy a register to a memory location.
+    COPY    <REG_NO> <MEM_LOCATION>   -- Copy a register to a memory location.
+    COPY    <REG_NO> <REG_NO>         -- Copy a register to another register.
 
     MOVE    <LITERAL>  -- Move the data pointer by given literal.
 

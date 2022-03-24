@@ -97,6 +97,14 @@ string interpreter::interpret(const string &program_txt) {
                 case 1:
                     heap[data_ptr + node.get_op1()] = registers[node.get_op2()];
                     break;
+                
+                case 2:
+                    registers[node.get_op1()] = heap[data_ptr + node.get_op2()];
+                    break;
+                
+                case 3:
+                    registers[node.get_op1()] = registers[node.get_op2()];
+                    break;
             }
         }
 

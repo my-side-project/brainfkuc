@@ -6,8 +6,10 @@
 
 #include "loop_compiler.hpp"
 #include "compiler_data.hpp"
+#include "compiler.hpp"
 
 using namespace std;
+using namespace compiler;
 using namespace loop_compiler;
 using namespace compiler_data;
 
@@ -28,7 +30,7 @@ vector<Loop> get_loops(vector<compiler_data::Node> source) {
             }
         }
 
-        if (node.get_command() == "JZ") {
+        if (node.get_command() == CMD_JZ) {
             Loop loop = Loop (node.get_line(), node.get_op1());
             if (! stack.empty()) {
                 stack.top().add_loop(loop);
@@ -45,7 +47,7 @@ bool is_loop_simple(vector<compiler_data::Node> source, Loop loop) {
     int loc = 0;
 
     for (int i=loop.get_start(); i<=loop.get_end(); i++) {
-        if (source[i].get_command() == "MOVE") {
+        if (source[i].get_command() == CMD_MOVE) {
             loc += source[i].get_op1();
         }
     }
@@ -65,7 +67,48 @@ vector<Loop> get_simple_flat_loops(vector<Loop> loops, vector<compiler_data::Nod
 }
 
 vector<compiler_data::Node> solve_simple_flat_loop(Loop loop, vector<compiler_data::Node> source) {
-    return source;
+    vector<Node> output;
+    unordered_map<int, int> node_weights;
+
+    int mem_loc = 0;
+    for (int i=loop.get_start(); i<loop.get_end(); i++) {
+        Node node = source[i];
+
+        if (node.get_command() == CMD_ADD && node.get_overload() == 0) {
+            if (node_weights.find(mem_loc) == node_weights.end()) {
+                node_weights[mem_loc] = 0;
+            }
+
+            node_weights[mem_loc] += node.get_op2();
+        } else if (node.get_command() == CMD_MOVE) {
+            mem_loc += node.get_op1();
+        }
+    }
+
+    int decrement = node_weights[0];
+
+    if (decrement >= 0) {
+        // This is either an infinite loop or depends on initial value being 0.
+        // Either way, we can't optimize it.
+        return source;
+    }
+
+    decrement = -decrement;
+
+    // Copy the start loc to register 0
+    output.push_back(Node (-1, 2, CMD_COPY, 0, 0, -1, -1));
+    // Divide by decrement with ceiling
+    output.push_back(Node (-1, 2, CMD_DIV, 0, decrement, 0, -1));
+
+    unordered_map<int, int>::iterator it = node_weights.begin();
+    while (it != node_weights.end()) {
+        int mem_loc = it->first;
+        int count = it->second;
+
+        
+    }
+
+    return output;
 }
 
 vector<compiler_data::Node> loop_compiler::compile_flat_loops(vector<compiler_data::Node> source) {
