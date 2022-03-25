@@ -1,3 +1,6 @@
+#ifndef UTIL_
+#define UTIL_
+
 #include <vector>
 
 using namespace std;
@@ -9,3 +12,5 @@ namespace util {
 
     string clean_program(const string &program);
 }
+
+#endif

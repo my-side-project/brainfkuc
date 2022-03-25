@@ -4,10 +4,11 @@
 #include <stack>
 #include <unordered_set>
 
-#include "loop_compiler.hpp"
-#include "compiler.hpp"
-#include "util.hpp"
-#include "compiler_data.hpp"
+#include "loop_compiler.h"
+#include "compiler.h"
+#include "compiler_data.h"
+
+#include "../util/util.h"
 
 using namespace std;
 using namespace compiler;
@@ -44,7 +45,6 @@ const unordered_set<char> stackable_commands_set(begin(stackable_commands), end(
 
 vector<compiler_data::Node> parseCode(const string &raw_program) {
     string program = util::clean_program(raw_program);
-    cout << "Total BF commands " << program.size() <<endl;
     
     stack<int> stack;
     vector<compiler_data::Node> compiled_program;
@@ -54,14 +54,16 @@ vector<compiler_data::Node> parseCode(const string &raw_program) {
         char command = program[code_ptr];
 
         if (command == '.') {
-            compiled_program.push_back(compiler_data::Node (line++, 0, CMD_PRINT, -1, -1, -1, -1));
+            compiled_program.push_back(compiler_data::Node (0, CMD_PRINT, -1, -1, -1, -1));
         } else if (command == '>' || command == '<') {
             int moves = 0;
             while (code_ptr < program.size() && (program[code_ptr] == '>' || program[code_ptr] == '<')) {
                 moves += (program[code_ptr++] == '>' ? 1 : -1);
             }
 
-            compiled_program.push_back(compiler_data::Node (line++, 0, CMD_MOVE, moves, -1, -1, -1));
+            compiled_program.push_back(compiler_data::Node (0, CMD_MOVE, moves, -1, -1, -1));
+
+            line++;
             continue;
         } else if (command == '+' || command == '-') {
             int adds = 0;
@@ -69,23 +71,22 @@ vector<compiler_data::Node> parseCode(const string &raw_program) {
                 adds += (program[code_ptr++] == '+' ? 1 : -1);
             }
 
-            compiled_program.push_back(compiler_data::Node (line++, 0, CMD_ADD, 0, adds, -1, -1));
+            line++;
+            compiled_program.push_back(compiler_data::Node (0, CMD_ADD, 0, adds, -1, -1));
             continue;
         } else if (command == '[') {
             stack.push(line);
-            compiled_program.push_back(compiler_data::Node (line++, 0, CMD_JZ, 0, -1, -1, -1));
+            compiled_program.push_back(compiler_data::Node (0, CMD_JZ, 0, -1, -1, -1));
         } else if (command == ']') {
             int popped = stack.top(); stack.pop();
             
             compiled_program[popped].set_op2(line - popped);
-            compiled_program.push_back(compiler_data::Node (line, 0, CMD_JNZ, 0, popped - line, -1, -1));
-            line++;
+            compiled_program.push_back(compiler_data::Node (0, CMD_JNZ, 0, popped - line, -1, -1));
         }
 
+        line++;
         code_ptr++;
     }
-
-    cout << "Total commands after initial assembly pass " << compiled_program.size() << endl;
 
     return compiled_program;
 }
@@ -102,6 +103,6 @@ void compiler::print_assembly(vector<compiler_data::Node> compiled) {
         compiler_data::Node node = *it;
         string command = node.get_command();
 
-        cout << node.get_line() << ": " << node.get_overload() << ": " << command << " " << node.get_op1() << " " << node.get_op2() << " " << node.get_op3() << " " << node.get_op4() << endl;
+        cout << command << ":" << node.get_overload() << " " << node.get_op1() << " " << node.get_op2() << " " << node.get_op3() << " " << node.get_op4() << endl;
     }
 }

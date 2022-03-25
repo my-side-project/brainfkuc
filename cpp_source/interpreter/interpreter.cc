@@ -1,11 +1,10 @@
-#include <iostream>
 #include <string>
 #include <math.h>
 
-#include "util.hpp"
-#include "compiler.hpp"
-#include "compiler_data.hpp"
-#include "interpreter.hpp"
+#include "../util/util.h"
+#include "../compiler/compiler.h"
+#include "../compiler/compiler_data.h"
+#include "interpreter.h"
 
 using namespace std;
 using namespace util;
@@ -31,8 +30,6 @@ string interpreter::interpret(const string &program_txt) {
     string output;
 
     while (code_ptr < compiled.size()) {
-        //cout<<heap[0] << " " << heap[1] << " " << registers[0] << " " << registers[1] << endl;
-
         compiler_data::Node node = compiled[code_ptr];
         string command = node.get_command();
 
@@ -52,14 +49,14 @@ string interpreter::interpret(const string &program_txt) {
                     o1 = heap[data_ptr + node.get_op1()];
                     o2 = node.get_op2();
 
-                    heap[data_ptr + node.get_op1()] = o2 >= 0 ? add(o1, o2, cell_size) : subtract(o1, -o2, cell_size);
+                    heap[data_ptr + node.get_op1()] = add(o1, o2, cell_size);
                     break;
 
                 case 1:
                     o1 = heap[data_ptr + node.get_op1()];
                     o2 = registers[node.get_op2()];
 
-                    heap[data_ptr + node.get_op1()] = o2 >= 0 ? add(o1, o2, cell_size) : subtract(o1, -o2, cell_size);
+                    heap[data_ptr + node.get_op1()] = add(o1, o2, cell_size);
                     break;
             }
         }
@@ -71,7 +68,7 @@ string interpreter::interpret(const string &program_txt) {
                     int o2 = node.get_op2();
 
                     int mult = o1 * o2;
-                    registers[node.get_op1()] = mult >= 0 ? add(0, mult, cell_size) : subtract(0, -mult, cell_size);
+                    registers[node.get_op1()] = add(0, mult, cell_size);
                     break;
             }
         }
@@ -86,7 +83,7 @@ string interpreter::interpret(const string &program_txt) {
                     double div = (double) o1 / o2;
                     int ans = (int) (should_floor == 1 ? floor(div) : ceil(div));
 
-                    registers[node.get_op1()] = ans >= 0 ? add(0, ans, cell_size) : subtract(0, -ans, cell_size);
+                    registers[node.get_op1()] = add(0, ans, cell_size);
                     break;
             }
         }
@@ -113,7 +110,7 @@ string interpreter::interpret(const string &program_txt) {
 
         if (command == CMD_MOVE) {
             int move_by = node.get_op1();
-            data_ptr = move_by >= 0 ? add(data_ptr, move_by, heap_size) : subtract(data_ptr, -move_by, heap_size);
+            data_ptr = add(data_ptr, move_by, heap_size);
         }
 
         if (command == CMD_JZ) {

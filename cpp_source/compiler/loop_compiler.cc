@@ -1,12 +1,11 @@
 #include <vector>
 #include <string>
 #include <stack>
-#include <iostream>
 #include <unordered_map>
 
-#include "loop_compiler.hpp"
-#include "compiler_data.hpp"
-#include "compiler.hpp"
+#include "loop_compiler.h"
+#include "compiler_data.h"
+#include "compiler.h"
 
 using namespace std;
 using namespace compiler;
@@ -31,7 +30,7 @@ vector<Loop> get_loops(vector<compiler_data::Node> source) {
         }
 
         if (node.get_command() == CMD_JZ) {
-            Loop loop = Loop (node.get_line(), node.get_line() + node.get_op2());
+            Loop loop = Loop (i, i + node.get_op2());
             if (! stack.empty()) {
                 stack.top().add_loop(loop);
             }
@@ -63,8 +62,6 @@ vector<Loop> get_simple_flat_loops(vector<Loop> loops, vector<compiler_data::Nod
         if (is_loop_simple(source, loops[i])) output.push_back(loops[i]);
     }
 
-    cout<< "Found " << output.size() << " simple flat loops" << endl;
-
     return output;
 }
 
@@ -93,8 +90,8 @@ vector<compiler_data::Node> solve_simple_flat_loop(Loop loop, vector<compiler_da
 
     decrement = -decrement;
 
-    output.push_back(Node (-1, 2, CMD_COPY, 0, 0, -1, -1));
-    output.push_back(Node (-1, 0, CMD_DIV, 0, decrement, 0, -1));
+    output.push_back(Node (2, CMD_COPY, 0, 0, -1, -1));
+    output.push_back(Node (0, CMD_DIV, 0, decrement, 0, -1));
 
     unordered_map<int, int>::iterator it;
     for (it = node_weights.begin(); it != node_weights.end(); it++) {
@@ -104,15 +101,15 @@ vector<compiler_data::Node> solve_simple_flat_loop(Loop loop, vector<compiler_da
         // Start location is handled differently.
         if (mem_loc == 0) continue;
 
-        output.push_back(Node (-1, 3, CMD_COPY, 1, 0, -1, -1));
-        output.push_back(Node (-1, 0, CMD_MUL, 1, count, -1, -1));
+        output.push_back(Node (3, CMD_COPY, 1, 0, -1, -1));
+        output.push_back(Node (0, CMD_MUL, 1, count, -1, -1));
 
         // Copy contents of register 0 to a temp register 1
-        output.push_back(Node (-1, 1, CMD_ADD, mem_loc, 1, -1, -1));
+        output.push_back(Node (1, CMD_ADD, mem_loc, 1, -1, -1));
     }
 
     // Copy contents of register 0 to a temp register 1
-    output.push_back(Node (-1, 0, CMD_COPY, 0, 0, -1, -1));
+    output.push_back(Node (0, CMD_COPY, 0, 0, -1, -1));
 
     return output;
 }

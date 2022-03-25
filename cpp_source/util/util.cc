@@ -1,7 +1,7 @@
 #include <string>
 #include <unordered_set>
 
-#include "util.hpp"
+#include "util.h"
 
 using namespace std;
 
@@ -9,6 +9,10 @@ const char valid_commands[] = {'>', '<', '+', '-', '.', '[', ']'};
 const unordered_set<char> valid_command_set (std::begin(valid_commands), std::end(valid_commands));
 
 int util::add(const int val, const int to_add, const int offset) {
+    if (to_add < 0) {
+        return util::subtract(val, -to_add, offset);
+    }
+
     return (val + to_add) % offset;
 }
 

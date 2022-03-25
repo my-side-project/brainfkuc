@@ -1,16 +1,16 @@
+#ifndef COMPILER_COMPILER_DATA_
+#define COMPILER_COMPILER_DATA_
+
 #include <string>
-
-#pragma once
-
 using namespace std;
 
 namespace compiler_data {
     class Node {
-        int line, overload, op1, op2, op3, op4;
+        int overload, op1, op2, op3, op4;
         string command;
 
         public:
-        Node(int line, int overload, string command, int op1, int op2, int op3, int op4);
+        Node(int overload, string command, int op1, int op2, int op3, int op4);
 
         void set_op1(int op1);
         void set_op2(int op2);
@@ -22,9 +22,10 @@ namespace compiler_data {
         int get_op3();
         int get_op4();
 
-        int get_line();
         int get_overload();
 
         string get_command();
     };
 }
+
+#endif

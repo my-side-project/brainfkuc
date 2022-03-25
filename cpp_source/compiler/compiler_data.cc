@@ -1,7 +1,6 @@
-#include "compiler_data.hpp"
+#include "compiler_data.h"
 
-compiler_data::Node::Node(int line, int overload, string command, int op1, int op2, int op3, int op4) {
-    this->line = line;
+compiler_data::Node::Node(int overload, string command, int op1, int op2, int op3, int op4) {
     this->overload = overload;
     this->command = command;
     this->op1 = op1;
@@ -28,10 +27,6 @@ void compiler_data::Node::set_op4(int op4) {
 
 string compiler_data::Node::get_command() {
     return this->command;
-}
-
-int compiler_data::Node::get_line() {
-    return this->line;
 }
 
 int compiler_data::Node::get_overload() {

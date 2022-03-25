@@ -1,7 +1,10 @@
+#ifndef COMPILER_LOOP_COMPILER_
+#define COMPILER_LOOP_COMPILER_
+
 #include <vector>
 #include <string>
 
-#include "compiler_data.hpp"
+#include "compiler_data.h"
 
 using namespace std;
 
@@ -22,3 +25,5 @@ namespace loop_compiler {
 
     vector<compiler_data::Node> compile_flat_loops(vector<compiler_data::Node> source);
 }
+
+#endif

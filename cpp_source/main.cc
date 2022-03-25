@@ -3,9 +3,9 @@
 #include <iostream>
 #include <fstream>
 
-#include "compiler.hpp"
-#include "compiler_data.hpp"
-#include "interpreter.hpp"
+#include "compiler/compiler.h"
+#include "compiler/compiler_data.h"
+#include "interpreter/interpreter.h"
 
 using namespace std;
 using namespace compiler;

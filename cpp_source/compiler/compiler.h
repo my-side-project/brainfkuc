@@ -1,7 +1,10 @@
+#ifndef COMPILER_COMPILER_
+#define COMPILER_COMPILER_
+
 #include <vector>
 #include <string>
 
-#include "compiler_data.hpp"
+#include "compiler_data.h"
 
 using namespace std;
 
@@ -18,3 +21,5 @@ namespace compiler {
     vector<compiler_data::Node> compile(const string &program_text);
     void print_assembly(vector<compiler_data::Node> compiled);
 }
+
+#endif
