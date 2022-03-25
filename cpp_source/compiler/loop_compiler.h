@@ -23,7 +23,7 @@ namespace loop_compiler {
         vector<Loop> get_subloops();
     };
 
-    vector<compiler_data::Node> compile_flat_loops(vector<compiler_data::Node> source);
+    vector<compiler_data::Node> compile_flat_loops(vector<compiler_data::Node> &source);
 }
 
 #endif

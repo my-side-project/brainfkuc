@@ -96,7 +96,7 @@ vector<compiler_data::Node> compiler::compile(const string &program_text) {
     return loop_compiler::compile_flat_loops(source);
 }
 
-void compiler::print_assembly(vector<compiler_data::Node> compiled) {
+void compiler::print_assembly(vector<compiler_data::Node> &compiled) {
     vector<compiler_data::Node>::iterator it;
 
     for (it = compiled.begin(); it != compiled.end(); it++) {

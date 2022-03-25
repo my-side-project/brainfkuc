@@ -1,5 +1,9 @@
 #include <string>
 #include <math.h>
+#include <memory>
+#include <iomanip>
+#include <iostream>
+#include <unordered_map>
 
 #include "../util/util.h"
 #include "../compiler/compiler.h"
@@ -15,114 +19,134 @@ const int cell_size = 256;
 const int heap_size = 30000;
 const int register_size = 8;
 
-string interpreter::interpret(const string &program_txt) {
-    vector<compiler_data::Node> compiled = compile(program_txt);
-
-    int code_ptr = 0;
-    int data_ptr = 0;
+/**
+ * Holds state of the running program so it can be passed around.
+ */
+struct ProgramState {
+    int code_ptr;
+    int data_ptr;
 
     int heap[heap_size];
     int registers[register_size];
+};
 
-    for (int i=0; i<heap_size; i++) heap[i] = 0;
-    for (int i=0; i<register_size; i++) registers[i] = 0;
+ProgramState get_fresh_program_state() {
+    ProgramState state;
 
-    string output;
+    state.code_ptr = 0;
+    state.data_ptr = 0;
 
-    while (code_ptr < compiled.size()) {
-        compiler_data::Node node = compiled[code_ptr];
+    for (int i=0; i<heap_size; i++) state.heap[i] = 0;
+    for (int i=0; i<register_size; i++) state.registers[i] = 0;
+
+    return state;
+}
+
+class CommandRunner {
+    public:
+    virtual ~CommandRunner() {};
+    virtual void execute(Node &command, ProgramState &st) = 0;
+};
+
+class PrintCommandRunner: public CommandRunner {
+    public:
+    void execute(Node &command, ProgramState &st) {
+        cout<<(char) st.heap[st.data_ptr];
+    }
+};
+
+class AddCommandRunner: public CommandRunner {
+    public:
+    void execute(Node &command, ProgramState &st) {
+        int o1 = st.heap[st.data_ptr + command.get_op1()];
+        
+        int o2;
+        if (command.get_overload() == 0) o2 = command.get_op2();
+        if (command.get_overload() == 1) o2 = st.registers[command.get_op2()];
+
+        st.heap[st.data_ptr + command.get_op1()] = add(o1, o2, cell_size);
+    }
+};
+
+class MultiplyCommandRunner: public CommandRunner {
+    public:
+    void execute(Node &command, ProgramState &st) {
+        int o1 = st.registers[command.get_op1()];
+        int o2 = command.get_op2();
+        st.registers[command.get_op1()] = add(0, o1 * o2, cell_size);
+    }
+};
+
+class DivideCommandRunner: public CommandRunner {
+    public:
+    void execute(Node &command, ProgramState &st) {
+        int o1 = st.registers[command.get_op1()];
+        int o2 = command.get_op2();
+        bool should_floor = command.get_op3();
+
+        double div = (double) o1 / o2;
+        int ans = (int) (should_floor == 1 ? floor(div) : ceil(div));
+
+        st.registers[command.get_op1()] = add(0, ans, cell_size);
+    }
+};
+
+class CopyCommandRunner: public CommandRunner {
+    public:
+    void execute(Node &command, ProgramState &st) {
+        if (command.get_overload() == 0) {
+            st.heap[st.data_ptr + command.get_op1()] = command.get_op2();
+        } else if (command.get_overload() == 1) {
+            st.heap[st.data_ptr + command.get_op1()] = st.registers[command.get_op2()];
+        } else if (command.get_overload() == 2) {
+            st.registers[command.get_op1()] = st.heap[st.data_ptr + command.get_op2()];
+        } else if (command.get_overload() == 3) {
+            st.registers[command.get_op1()] = st.registers[command.get_op2()];
+        }
+    }
+};
+
+class MoveCommandRunner: public CommandRunner {
+    public:
+    void execute(Node &command, ProgramState &st) {
+        int move_by = command.get_op1();
+        st.data_ptr = add(st.data_ptr, move_by, heap_size);
+    }
+};
+
+class JZCommandRunner: public CommandRunner {
+    public:
+    void execute(Node &command, ProgramState &st) {
+        if (st.heap[st.data_ptr + command.get_op1()] == 0) st.code_ptr += command.get_op2();
+    }
+};
+
+class JNZCommandRunner: public CommandRunner {
+    public:
+    void execute(Node &command, ProgramState &st) {
+        if (st.heap[st.data_ptr + command.get_op1()] != 0) st.code_ptr += command.get_op2();
+    }
+};
+
+void interpreter::interpret(const string &program_txt) {
+    unordered_map<string, CommandRunner*> command_runners;
+    command_runners[CMD_PRINT] = new PrintCommandRunner();
+    command_runners[CMD_ADD] = new AddCommandRunner();
+    command_runners[CMD_MUL] = new MultiplyCommandRunner();
+    command_runners[CMD_DIV] = new DivideCommandRunner();
+    command_runners[CMD_COPY] = new CopyCommandRunner();
+    command_runners[CMD_MOVE] = new MoveCommandRunner();
+    command_runners[CMD_JZ] = new JZCommandRunner();
+    command_runners[CMD_JNZ] = new JNZCommandRunner();
+
+    vector<compiler_data::Node> compiled = compile(program_txt);
+    ProgramState state = get_fresh_program_state();
+
+    while (state.code_ptr < compiled.size()) {
+        compiler_data::Node node = compiled[state.code_ptr];
         string command = node.get_command();
 
-        if (data_ptr < 0) {
-            return "";
-        }
-
-        if (command == CMD_PRINT) {
-            output.push_back((char) heap[data_ptr]);
-        }
-
-        if (command == CMD_ADD) {
-            int o1, o2;
-
-            switch(node.get_overload()) {
-                case 0:
-                    o1 = heap[data_ptr + node.get_op1()];
-                    o2 = node.get_op2();
-
-                    heap[data_ptr + node.get_op1()] = add(o1, o2, cell_size);
-                    break;
-
-                case 1:
-                    o1 = heap[data_ptr + node.get_op1()];
-                    o2 = registers[node.get_op2()];
-
-                    heap[data_ptr + node.get_op1()] = add(o1, o2, cell_size);
-                    break;
-            }
-        }
-
-        if (command == CMD_MUL) {
-            switch(node.get_overload()) {
-                case 0:
-                    int o1 = registers[node.get_op1()];
-                    int o2 = node.get_op2();
-
-                    int mult = o1 * o2;
-                    registers[node.get_op1()] = add(0, mult, cell_size);
-                    break;
-            }
-        }
-
-        if (command == CMD_DIV) {
-            switch(node.get_overload()) {
-                case 0:
-                    int o1 = registers[node.get_op1()];
-                    int o2 = node.get_op2();
-                    int should_floor = node.get_op3();
-
-                    double div = (double) o1 / o2;
-                    int ans = (int) (should_floor == 1 ? floor(div) : ceil(div));
-
-                    registers[node.get_op1()] = add(0, ans, cell_size);
-                    break;
-            }
-        }
-
-        if (command == CMD_COPY) {
-            switch(node.get_overload()) {
-                case 0:
-                    heap[data_ptr + node.get_op1()] = node.get_op2();
-                    break;
-
-                case 1:
-                    heap[data_ptr + node.get_op1()] = registers[node.get_op2()];
-                    break;
-                
-                case 2:
-                    registers[node.get_op1()] = heap[data_ptr + node.get_op2()];
-                    break;
-                
-                case 3:
-                    registers[node.get_op1()] = registers[node.get_op2()];
-                    break;
-            }
-        }
-
-        if (command == CMD_MOVE) {
-            int move_by = node.get_op1();
-            data_ptr = add(data_ptr, move_by, heap_size);
-        }
-
-        if (command == CMD_JZ) {
-            if (heap[data_ptr + node.get_op1()] == 0) code_ptr += node.get_op2();
-        }
-
-        if (command == CMD_JNZ) {
-            if (heap[data_ptr + node.get_op1()] != 0) code_ptr += node.get_op2();
-        }
-
-        code_ptr += 1;
+        command_runners[command]->execute(node, state);
+        state.code_ptr += 1;
     }
-
-    return output;
 }

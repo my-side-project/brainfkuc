@@ -6,7 +6,7 @@
 using namespace std;
 
 namespace interpreter {
-    string interpret(const string &program);
+    void interpret(const string &program);
 }
 
 #endif

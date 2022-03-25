@@ -12,7 +12,7 @@ using namespace compiler;
 using namespace loop_compiler;
 using namespace compiler_data;
 
-vector<Loop> get_loops(vector<compiler_data::Node> source) {
+vector<Loop> get_loops(vector<compiler_data::Node> &source) {
     stack<Loop> stack;
     vector<Loop> output;
 
@@ -42,7 +42,7 @@ vector<Loop> get_loops(vector<compiler_data::Node> source) {
     return output;
 }
 
-bool is_loop_simple(vector<compiler_data::Node> source, Loop loop) {
+bool is_loop_simple(vector<compiler_data::Node> &source, Loop &loop) {
     int loc = 0;
 
     for (int i=loop.get_start(); i<=loop.get_end(); i++) {
@@ -54,7 +54,7 @@ bool is_loop_simple(vector<compiler_data::Node> source, Loop loop) {
     return loc == 0;
 }
 
-vector<Loop> get_simple_flat_loops(vector<Loop> loops, vector<compiler_data::Node> source) {
+vector<Loop> get_simple_flat_loops(vector<Loop> &loops, vector<compiler_data::Node> &source) {
     vector<Loop> output;
 
     for (int i=0; i<loops.size(); i++) {
@@ -65,7 +65,7 @@ vector<Loop> get_simple_flat_loops(vector<Loop> loops, vector<compiler_data::Nod
     return output;
 }
 
-vector<compiler_data::Node> solve_simple_flat_loop(Loop loop, vector<compiler_data::Node> source) {
+vector<compiler_data::Node> solve_simple_flat_loop(Loop &loop, vector<compiler_data::Node> &source) {
     vector<Node> output;
     unordered_map<int, int> node_weights;
 
@@ -114,7 +114,7 @@ vector<compiler_data::Node> solve_simple_flat_loop(Loop loop, vector<compiler_da
     return output;
 }
 
-vector<compiler_data::Node> loop_compiler::compile_flat_loops(vector<compiler_data::Node> source) {
+vector<compiler_data::Node> loop_compiler::compile_flat_loops(vector<compiler_data::Node> &source) {
     vector<Node> compiled;
 
     vector<Loop> loops = get_loops(source);

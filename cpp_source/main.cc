@@ -32,8 +32,7 @@ int main(int argc, char** argv) {
     string code = get_code(file_name);
     
     if (command == "run") {
-        string output = interpret(code);
-        cout << output << endl;
+        interpret(code);
     } else {
         vector<compiler_data::Node> compiled = compile(code);
         print_assembly(compiled);

@@ -19,7 +19,7 @@ namespace compiler {
     const string CMD_JNZ = "JNZ";
 
     vector<compiler_data::Node> compile(const string &program_text);
-    void print_assembly(vector<compiler_data::Node> compiled);
+    void print_assembly(vector<compiler_data::Node> &compiled);
 }
 
 #endif
