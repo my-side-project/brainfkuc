@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 #include <math.h>
 
@@ -30,6 +31,8 @@ string interpreter::interpret(const string &program_txt) {
     string output;
 
     while (code_ptr < compiled.size()) {
+        //cout<<heap[0] << " " << heap[1] << " " << registers[0] << " " << registers[1] << endl;
+
         compiler_data::Node node = compiled[code_ptr];
         string command = node.get_command();
 
@@ -114,11 +117,11 @@ string interpreter::interpret(const string &program_txt) {
         }
 
         if (command == CMD_JZ) {
-            if (heap[data_ptr + node.get_op1()] == 0) code_ptr = node.get_op2();
+            if (heap[data_ptr + node.get_op1()] == 0) code_ptr += node.get_op2();
         }
 
         if (command == CMD_JNZ) {
-            if (heap[data_ptr + node.get_op1()] != 0) code_ptr = node.get_op2();
+            if (heap[data_ptr + node.get_op1()] != 0) code_ptr += node.get_op2();
         }
 
         code_ptr += 1;

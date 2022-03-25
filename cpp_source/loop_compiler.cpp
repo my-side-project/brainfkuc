@@ -31,7 +31,7 @@ vector<Loop> get_loops(vector<compiler_data::Node> source) {
         }
 
         if (node.get_command() == CMD_JZ) {
-            Loop loop = Loop (node.get_line(), node.get_op1());
+            Loop loop = Loop (node.get_line(), node.get_line() + node.get_op2());
             if (! stack.empty()) {
                 stack.top().add_loop(loop);
             }
@@ -63,6 +63,8 @@ vector<Loop> get_simple_flat_loops(vector<Loop> loops, vector<compiler_data::Nod
         if (is_loop_simple(source, loops[i])) output.push_back(loops[i]);
     }
 
+    cout<< "Found " << output.size() << " simple flat loops" << endl;
+
     return output;
 }
 
@@ -71,14 +73,10 @@ vector<compiler_data::Node> solve_simple_flat_loop(Loop loop, vector<compiler_da
     unordered_map<int, int> node_weights;
 
     int mem_loc = 0;
-    for (int i=loop.get_start(); i<loop.get_end(); i++) {
+    for (int i=loop.get_start(); i<=loop.get_end(); i++) {
         Node node = source[i];
 
         if (node.get_command() == CMD_ADD && node.get_overload() == 0) {
-            if (node_weights.find(mem_loc) == node_weights.end()) {
-                node_weights[mem_loc] = 0;
-            }
-
             node_weights[mem_loc] += node.get_op2();
         } else if (node.get_command() == CMD_MOVE) {
             mem_loc += node.get_op1();
@@ -90,30 +88,60 @@ vector<compiler_data::Node> solve_simple_flat_loop(Loop loop, vector<compiler_da
     if (decrement >= 0) {
         // This is either an infinite loop or depends on initial value being 0.
         // Either way, we can't optimize it.
-        return source;
+        return output;
     }
 
     decrement = -decrement;
 
-    unordered_map<int, int>::iterator it = node_weights.begin();
-    while (it != node_weights.end()) {
+    output.push_back(Node (-1, 2, CMD_COPY, 0, 0, -1, -1));
+    output.push_back(Node (-1, 0, CMD_DIV, 0, decrement, 0, -1));
+
+    unordered_map<int, int>::iterator it;
+    for (it = node_weights.begin(); it != node_weights.end(); it++) {
         int mem_loc = it->first;
         int count = it->second;
 
+        // Start location is handled differently.
+        if (mem_loc == 0) continue;
+
+        output.push_back(Node (-1, 3, CMD_COPY, 1, 0, -1, -1));
+        output.push_back(Node (-1, 0, CMD_MUL, 1, count, -1, -1));
+
         // Copy contents of register 0 to a temp register 1
-        output.push_back(Node (-1, 0, CMD_ADD, mem_loc, decrement * count, -1, -1));
+        output.push_back(Node (-1, 1, CMD_ADD, mem_loc, 1, -1, -1));
     }
+
+    // Copy contents of register 0 to a temp register 1
+    output.push_back(Node (-1, 0, CMD_COPY, 0, 0, -1, -1));
 
     return output;
 }
 
 vector<compiler_data::Node> loop_compiler::compile_flat_loops(vector<compiler_data::Node> source) {
-    vector<Loop> loops = get_loops(source);
+    vector<Node> compiled;
 
-    // Collapse all the simple (i.e. start and end at same point) loops.
+    vector<Loop> loops = get_loops(source);
     vector<Loop> simple_flat_loops = get_simple_flat_loops(loops, source);
 
-    return source;
+    int code_ptr = 0;
+    int loop_ptr = 0;
+    while (code_ptr < source.size()) {
+        if (loop_ptr < simple_flat_loops.size()
+            && code_ptr == simple_flat_loops[loop_ptr].get_start()) {
+            vector<Node> optimized = solve_simple_flat_loop(simple_flat_loops[loop_ptr++], source);
+
+            if (! optimized.empty()) {
+                for (int i=0; i<optimized.size(); i++) compiled.push_back(optimized[i]);
+                code_ptr += source[code_ptr].get_op2();
+            }
+        } else {
+            compiled.push_back(source[code_ptr]);
+        }
+
+        code_ptr += 1;
+    }
+
+    return compiled;
 }
 
 loop_compiler::Loop::Loop(int start, int end) {

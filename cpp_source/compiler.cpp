@@ -77,8 +77,9 @@ vector<compiler_data::Node> parseCode(const string &raw_program) {
         } else if (command == ']') {
             int popped = stack.top(); stack.pop();
             
-            compiled_program[popped].set_op2(line);
-            compiled_program.push_back(compiler_data::Node (line++, 0, CMD_JNZ, 0, popped, -1, -1));
+            compiled_program[popped].set_op2(line - popped);
+            compiled_program.push_back(compiler_data::Node (line, 0, CMD_JNZ, 0, popped - line, -1, -1));
+            line++;
         }
 
         code_ptr++;
@@ -91,8 +92,7 @@ vector<compiler_data::Node> parseCode(const string &raw_program) {
 
 vector<compiler_data::Node> compiler::compile(const string &program_text) {
     vector<compiler_data::Node> source = parseCode(program_text);
-    loop_compiler::compile_flat_loops(source);
-    return source;
+    return loop_compiler::compile_flat_loops(source);
 }
 
 void compiler::print_assembly(vector<compiler_data::Node> compiled) {
