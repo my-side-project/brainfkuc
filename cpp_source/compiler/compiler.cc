@@ -12,6 +12,7 @@
 
 using namespace std;
 using namespace compiler;
+using namespace compiler_data;
 using namespace loop_compiler;
 
 const char stackable_commands[] = { '>', '<', '+', '-' };
@@ -43,25 +44,25 @@ const unordered_set<char> stackable_commands_set(begin(stackable_commands), end(
     so negative values are allowed.
  */
 
-vector<compiler_data::Node> parseCode(const string &raw_program) {
+vector<Node> parseCode(const string &raw_program) {
     string program = util::clean_program(raw_program);
     
     stack<int> stack;
-    vector<compiler_data::Node> compiled_program;
+    vector<Node> compiled_program;
 
     int line = 0, code_ptr = 0;
     while (code_ptr < program.size()) {
         char command = program[code_ptr];
 
         if (command == '.') {
-            compiled_program.push_back(compiler_data::Node (0, CMD_PRINT, -1, -1, -1, -1));
+            compiled_program.push_back(Node(0, CMD_PRINT));
         } else if (command == '>' || command == '<') {
             int moves = 0;
             while (code_ptr < program.size() && (program[code_ptr] == '>' || program[code_ptr] == '<')) {
                 moves += (program[code_ptr++] == '>' ? 1 : -1);
             }
 
-            compiled_program.push_back(compiler_data::Node (0, CMD_MOVE, moves, -1, -1, -1));
+            compiled_program.push_back(Node(0, CMD_MOVE, moves));
 
             line++;
             continue;
@@ -72,16 +73,16 @@ vector<compiler_data::Node> parseCode(const string &raw_program) {
             }
 
             line++;
-            compiled_program.push_back(compiler_data::Node (0, CMD_ADD, 0, adds, -1, -1));
+            compiled_program.push_back(Node(0, CMD_ADD, 0, adds));
             continue;
         } else if (command == '[') {
             stack.push(line);
-            compiled_program.push_back(compiler_data::Node (0, CMD_JZ, 0, -1, -1, -1));
+            compiled_program.push_back(Node(0, CMD_JZ, 0));
         } else if (command == ']') {
             int popped = stack.top(); stack.pop();
             
             compiled_program[popped].set_op2(line - popped);
-            compiled_program.push_back(compiler_data::Node (0, CMD_JNZ, 0, popped - line, -1, -1));
+            compiled_program.push_back(Node(0, CMD_JNZ, 0, popped - line));
         }
 
         line++;

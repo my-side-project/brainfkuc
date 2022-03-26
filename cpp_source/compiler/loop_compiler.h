@@ -14,13 +14,26 @@ namespace loop_compiler {
         vector<Loop> subloops;
 
         public:
-        Loop(int start, int end);
+        Loop(int start, int end) {
+            this->start = start;
+            this->end = end;
+        }
 
-        void add_loop(Loop loop);
+        void add_loop(Loop loop) {
+            this->subloops.push_back(loop);
+        }
 
-        int get_start();
-        int get_end();
-        vector<Loop> get_subloops();
+        int get_start() {
+            return this->start;
+        }
+
+        int get_end() {
+            return this->end;
+        }
+
+        vector<Loop> get_subloops() {
+            return this->subloops;
+        }
     };
 
     vector<compiler_data::Node> compile_flat_loops(vector<compiler_data::Node> &source);

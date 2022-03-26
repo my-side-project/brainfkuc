@@ -90,8 +90,8 @@ vector<compiler_data::Node> solve_simple_flat_loop(Loop &loop, vector<compiler_d
 
     decrement = -decrement;
 
-    output.push_back(Node (2, CMD_COPY, 0, 0, -1, -1));
-    output.push_back(Node (0, CMD_DIV, 0, decrement, 0, -1));
+    output.push_back(Node(2, CMD_COPY, 0, 0));
+    output.push_back(Node(0, CMD_DIV, 0, decrement, 0));
 
     unordered_map<int, int>::iterator it;
     for (it = node_weights.begin(); it != node_weights.end(); it++) {
@@ -101,15 +101,15 @@ vector<compiler_data::Node> solve_simple_flat_loop(Loop &loop, vector<compiler_d
         // Start location is handled differently.
         if (mem_loc == 0) continue;
 
-        output.push_back(Node (3, CMD_COPY, 1, 0, -1, -1));
-        output.push_back(Node (0, CMD_MUL, 1, count, -1, -1));
+        output.push_back(Node (3, CMD_COPY, 1, 0));
+        output.push_back(Node (0, CMD_MUL, 1, count));
 
         // Copy contents of register 0 to a temp register 1
-        output.push_back(Node (1, CMD_ADD, mem_loc, 1, -1, -1));
+        output.push_back(Node (1, CMD_ADD, mem_loc, 1));
     }
 
     // Copy contents of register 0 to a temp register 1
-    output.push_back(Node (0, CMD_COPY, 0, 0, -1, -1));
+    output.push_back(Node (0, CMD_COPY, 0, 0));
 
     return output;
 }
@@ -139,25 +139,4 @@ vector<compiler_data::Node> loop_compiler::compile_flat_loops(vector<compiler_da
     }
 
     return compiled;
-}
-
-loop_compiler::Loop::Loop(int start, int end) {
-    this->start = start;
-    this->end = end;
-}
-
-int loop_compiler::Loop::get_start() {
-    return this->start;
-}
-
-int loop_compiler::Loop::get_end() {
-    return this->end;
-}
-
-void loop_compiler::Loop::add_loop(Loop loop) {
-    this->subloops.push_back(loop);
-}
-
-vector<Loop> loop_compiler::Loop::get_subloops() {
-    return this->subloops;
 }
