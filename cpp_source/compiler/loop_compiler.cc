@@ -20,13 +20,9 @@ vector<Loop> get_loops(vector<compiler_data::Node> &source) {
     for (int i=0; i<source.size(); i++) {
         compiler_data::Node node = source[i];
 
-        while (!stack.empty() != 0 && stack.top().get_end() <= i) {
-            Loop loop = stack.top();
-            stack.pop();
-
-            if (stack.empty()) {
-                output.push_back(loop);
-            }
+        while (!stack.empty() && stack.top().get_end() <= i) {
+            Loop loop = stack.top(); stack.pop();
+            if (stack.empty()) output.push_back(loop);
         }
 
         if (node.get_command() == CMD_JZ) {

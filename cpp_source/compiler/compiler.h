@@ -18,7 +18,9 @@ namespace compiler {
     const string CMD_JZ = "JZ";
     const string CMD_JNZ = "JNZ";
 
-    vector<compiler_data::Node> compile(const string &program_text);
+    vector<compiler_data::Node> compile(const string &program_text, const bool optimize_loops);
+    vector<compiler_data::Node> compile_raw(const string &program_text);
+
     void print_assembly(vector<compiler_data::Node> &compiled);
 }
 

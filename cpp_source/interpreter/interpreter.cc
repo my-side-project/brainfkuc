@@ -49,9 +49,17 @@ class CommandRunner {
 };
 
 class PrintCommandRunner: public CommandRunner {
+    private:
+    bool silent;
     public:
+    PrintCommandRunner(bool silent) {
+        this->silent = silent;
+    }
+
     void execute(Node &command, ProgramState &st) {
-        cout<<(char) st.heap[st.data_ptr];
+        if (! this->silent) {
+            cout<<(char) st.heap[st.data_ptr];
+        }
     }
 };
 
@@ -128,9 +136,9 @@ class JNZCommandRunner: public CommandRunner {
     }
 };
 
-void interpreter::interpret(const string &program_txt) {
+int interpreter::interpret(const vector<Node> &compiled, const bool silent) {
     unordered_map<string, CommandRunner*> command_runners;
-    command_runners[CMD_PRINT] = new PrintCommandRunner();
+    command_runners[CMD_PRINT] = new PrintCommandRunner(silent);
     command_runners[CMD_ADD] = new AddCommandRunner();
     command_runners[CMD_MUL] = new MultiplyCommandRunner();
     command_runners[CMD_DIV] = new DivideCommandRunner();
@@ -139,8 +147,9 @@ void interpreter::interpret(const string &program_txt) {
     command_runners[CMD_JZ] = new JZCommandRunner();
     command_runners[CMD_JNZ] = new JNZCommandRunner();
 
-    vector<compiler_data::Node> compiled = compile(program_txt);
     ProgramState state = get_fresh_program_state();
+
+    int instructions = 0;
 
     while (state.code_ptr < compiled.size()) {
         compiler_data::Node node = compiled[state.code_ptr];
@@ -148,5 +157,9 @@ void interpreter::interpret(const string &program_txt) {
 
         command_runners[command]->execute(node, state);
         state.code_ptr += 1;
+
+        instructions += 1;
     }
+
+    return instructions;
 }

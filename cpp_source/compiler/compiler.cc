@@ -92,9 +92,50 @@ vector<Node> parseCode(const string &raw_program) {
     return compiled_program;
 }
 
-vector<compiler_data::Node> compiler::compile(const string &program_text) {
+vector<Node> compiler::compile_raw(const string &program_text) {
+    stack<int> stack;
+    vector<Node> raw_output;
+
+    int line = 0;
+
+    string::const_iterator it;
+    for (it = program_text.begin(); it != program_text.end(); it++) {
+        char instr = *it;
+
+        if (instr == '.') {
+            raw_output.push_back(Node (0, CMD_PRINT));
+        } else if (instr == '+') {
+            raw_output.push_back(Node(0, CMD_ADD, 0, 1));
+        } else if (instr == '-') {
+            raw_output.push_back(Node(0, CMD_ADD, 0, -1));
+        } else if (instr == '>') {
+            raw_output.push_back(Node(0, CMD_MOVE, 1));
+        } else if (instr == '<') {
+            raw_output.push_back(Node(0, CMD_MOVE, -1));
+        } else if (instr == '[') {
+            stack.push(line);
+            raw_output.push_back(Node(0, CMD_JZ, 0));
+        } else if (instr == ']') {
+            int popped = stack.top(); stack.pop();
+            raw_output[popped].set_op2(line - popped);
+
+            raw_output.push_back(Node(0, CMD_JNZ, 0, popped - line));
+        }
+
+        line += 1;
+    }
+
+    return raw_output;
+}
+
+vector<Node> compiler::compile(const string &program_text, const bool optimize_loops) {
     vector<compiler_data::Node> source = parseCode(program_text);
-    return loop_compiler::compile_flat_loops(source);
+    
+    if (optimize_loops) {
+        return loop_compiler::compile_flat_loops(source);
+    }
+
+    return source;
 }
 
 void compiler::print_assembly(vector<compiler_data::Node> &compiled) {
